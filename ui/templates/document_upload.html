@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传系统</title>
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .upload-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .upload-area {
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #3498db;
+            background-color: #f8fafc;
+        }
+
+        .upload-area.active {
+            border-color: #3498db;
+            background-color: #e8f4fc;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .submit-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #ecf0f1;
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>Upload Your File</h1>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <p class="upload-text">Click or Drag Files Here to Upload</p>
+            <p>Supports singe file to upload, including .docx, .doc</p>
+            <input type="file" id="fileInput" class="file-input">
+        </div>
+
+        <div class="file-info" id="fileInfo">No file selected</div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" disabled>Upload</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progress = document.getElementById('progress');
+
+            let selectedFile = null;
+
+            // 点击上传区域触发文件选择
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            // 拖拽相关事件
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('active');
+            });
+
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.classList.remove('active');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('active');
+
+                if (e.dataTransfer.files.length) {
+                    handleFileSelection(e.dataTransfer.files[0]);
+                }
+            });
+
+            // 文件选择变化
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length) {
+                    handleFileSelection(fileInput.files[0]);
+                }
+            });
+
+            // 处理文件选择
+            function handleFileSelection(file) {
+                selectedFile = file;
+                fileInfo.textContent = `已选择: ${file.name} (${formatFileSize(file.size)})`;
+                submitBtn.disabled = false;
+            }
+
+            // 格式化文件大小
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // 提交上传
+            submitBtn.addEventListener('click', function() {
+                if (!selectedFile) return;
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const xhr = new XMLHttpRequest();
+
+                // 显示进度条
+                progressBar.style.display = 'block';
+                progress.style.width = '0%';
+
+                // 上传进度
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progress.style.width = percent + '%';
+                    }
+                });
+
+                // 上传完成
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200) {
+                        alert('文件上传成功!');
+                        resetUploader();
+                        window.open("/chat/", "_self");  // 在当前标签页打开
+
+                    } else {
+                        alert('文件上传失败: ' + xhr.statusText);
+                    }
+                });
+
+                // 上传错误
+                xhr.addEventListener('error', function() {
+                    alert('文件上传出错，请重试');
+                    progressBar.style.display = 'none';
+                });
+
+                // 发送请求
+                xhr.open('POST', '/document_upload/', true); // 替换为你的后端接口
+                xhr.send(formData);
+            });
+
+            // 重置上传器
+            function resetUploader() {
+                selectedFile = null;
+                fileInput.value = '';
+                fileInfo.textContent = '未选择文件';
+                submitBtn.disabled = true;
+                progressBar.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
