@@ -57,7 +57,7 @@ class OpenAIVectorStore:
         :param embeddings_model:
         :return: vector store instance based on documents
         """
-        print("-" * 100)
-        print("Execute langchain_chroma.vectorstores.Chroma.from_documents to add documents into db.")
-        print("-" * 100)
+        # print("-" * 100)
+        # print("Execute langchain_chroma.vectorstores.Chroma.from_documents to add documents into db.")
+        # print("-" * 100)
         return Chroma.from_documents(persist_directory="./openai_chromadb", documents=documents, embedding=embeddings_model)
