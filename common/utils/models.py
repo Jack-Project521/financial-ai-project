@@ -1,4 +1,5 @@
 import inspect
+import os
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -10,7 +11,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 
 # OpenAI configuration
-OPENAI_API_KEY = "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";
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY");
 OPENAI_MODEL = "gpt-4.1";
 OPENAI_URL = "https://api.openai.com/v1"
 # For most implementations, text-embedding-3-small with 512 dimensions provides the best balance of performance and cost efficiency

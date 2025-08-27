@@ -196,6 +196,6 @@ def get_completion(prompt):
         OPENAI_API_KEY,
         OPENAI_MODEL,
         temperature=0,
-        debug=True
+        verbose=True
     )
     return chat_client.invoke(prompt)

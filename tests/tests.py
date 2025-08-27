@@ -19,7 +19,7 @@ llm = get_lc_model_client(
     OPENAI_API_KEY,
     OPENAI_MODEL,
     temperature=0,
-    debug=True
+    verbose=True
 )
 
 def query_csv(question: str):
