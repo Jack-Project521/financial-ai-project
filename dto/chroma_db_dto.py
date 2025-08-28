@@ -1,4 +1,5 @@
 import chromadb
+from chromadb import Settings
 from langchain_chroma import Chroma
 
 from common.utils.models import get_embeddings_bge, get_embeddings_openai
@@ -9,10 +10,10 @@ class OpenAIVectorStore:
     def __init__(self, collection_name):
 
         # Persist in disk
-        self.chroma_client = chromadb.PersistentClient(path="./openai_chroma")
+        self.chroma_client = chromadb.Client(Settings(allow_reset=True))
 
         # Create a default collection
-        self.collection = self.chroma_client.get_or_create_collection(name=collection_name)
+        # self.collection = self.chroma_client.get_or_create_collection(name=collection_name)
 
     # Add documents and vector with collection name given
     def add_documents_by_collection_name(self, documents, collection_name):
@@ -60,4 +61,4 @@ class OpenAIVectorStore:
         # print("-" * 100)
         # print("Execute langchain_chroma.vectorstores.Chroma.from_documents to add documents into db.")
         # print("-" * 100)
-        return Chroma.from_documents(persist_directory="./openai_chromadb", documents=documents, embedding=embeddings_model)
+        return Chroma.from_documents(persist_directory="./openai_chroma", documents=documents, embedding=embeddings_model)
