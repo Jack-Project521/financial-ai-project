@@ -15,6 +15,9 @@ class OpenAIVectorStore:
         # Create a default collection
         # self.collection = self.chroma_client.get_or_create_collection(name=collection_name)
 
+        # Define vectorstore
+        self.vectorstore = self.chroma_client
+
     # Add documents and vector with collection name given
     def add_documents_by_collection_name(self, documents, collection_name):
         print('add_documents: collection_name:', collection_name)
@@ -61,4 +64,16 @@ class OpenAIVectorStore:
         # print("-" * 100)
         # print("Execute langchain_chroma.vectorstores.Chroma.from_documents to add documents into db.")
         # print("-" * 100)
-        return Chroma.from_documents(persist_directory="./openai_chroma", documents=documents, embedding=embeddings_model)
+
+        self.vectorstore = Chroma.from_documents(persist_directory="./openai_chroma", documents=documents, embedding=embeddings_model)
+
+        return self.vectorstore
+
+    # Reconnect to the existing persisted vectorstore
+    def reconnect_vectorstore(self, embeddings_model):
+
+        vectorstore = Chroma(
+            persist_directory="./openai_chroma",
+            embedding_function=embeddings_model
+        )
+        return vectorstore

@@ -1,0 +1,18 @@
+services:
+
+  # add --reload only if your script supports it for 'command' feature — Flask itself reloads when debug=True
+  financial-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    container_name: python-server
+    command: python main.py
+    volumes:
+      - .:/code/financial-ai-project:rw
+    ports:
+      - "8080:8080"
+
+  redis:
+    image: redis:alpine

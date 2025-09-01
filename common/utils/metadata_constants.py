@@ -9,6 +9,10 @@ DOCUMENT_CONTENT_DESCRIPTION_BEEF = """
     {columns}
 """
 
+DOCUMENT_CONTENT_DESCRIPTION_BEEF_COLUMNS = """
+    date, year, week_number, kill_number, bone_number, kill_weight, bone_weight, kill_Cost_$, bone_Cost_$, kill_cost_$/kg, bone_cost_$/kg, prod_ctn, prod_kg
+"""
+
 METADATA_FIELD_INFO_BEEF_SMALL = [
     AttributeInfo(name="date", description="the date of the data item", type="string"),
     AttributeInfo(name="year", description="the year of the data item", type="string"),  # string

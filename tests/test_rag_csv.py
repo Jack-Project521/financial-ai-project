@@ -1,8 +1,6 @@
 import pandas as pd
-from langchain.chains.query_constructor.schema import AttributeInfo
 from langchain.retrievers import SelfQueryRetriever
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import DataFrameLoader
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import OpenAIEmbeddings
@@ -58,7 +56,7 @@ def test_rag_csv(user_query):
             return []
 
 
-    vectorstore = Chroma.from_documents(documents=documents, embedding=get_embeddings_model_openai())
+    vectorstore = Chroma.from_documents(collection_name="test_rag_csv", documents=documents, embedding=get_embeddings_model_openai())
 
     document_content_description = DOCUMENT_CONTENT_DESCRIPTION_BEEF.format(columns=", ".join(docs_data_frame.columns))
 

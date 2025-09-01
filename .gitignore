@@ -1,4 +1,17 @@
+# Environment
 /.venv/
+venv
+.env
+
+# IDE
 .idea/
+.vscode/
+/.run/
+.fleet/
+
+# macOS
+.DS_Store
+
+# Vector store & original file folder
 /openai_chroma/
 /uploads/

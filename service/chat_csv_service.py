@@ -3,7 +3,7 @@ from langchain_core.prompts import PromptTemplate
 
 from common.utils.log import logger
 from common.utils.metadata_constants import DOCUMENT_CONTENT_DESCRIPTION_BEEF, METADATA_FIELD_INFO_BEEF, \
-    METADATA_FIELD_INFO_BEEF_SMALL
+    METADATA_FIELD_INFO_BEEF_SMALL, DOCUMENT_CONTENT_DESCRIPTION_BEEF_COLUMNS
 from common.utils.models import get_lc_model_client, OPENAI_API_KEY, OPENAI_MODEL, \
     get_embeddings_model_openai
 from common.utils.utils import extract_text_from_csv
@@ -18,11 +18,6 @@ llm = get_lc_model_client(
     verbose=True
 )
 
-# Return vector store instance
-vectorstore = ""
-#
-columns = ""
-
 # Add data to vector store by Langchain
 def add_data_from_documents(file_path):
     """
@@ -32,13 +27,10 @@ def add_data_from_documents(file_path):
     logger.debug(f"Adding data from {file_path}")
 
     # List[Document]
-    global columns
-    documents, columns = extract_text_from_csv(file_path)
+    documents = extract_text_from_csv(file_path)
 
-    global vectorstore
-    vectorstore = vector_db.add_data_from_documents(documents, get_embeddings_model_openai())
+    vector_db.add_data_from_documents(documents, get_embeddings_model_openai())
 
-    return vectorstore
 
 
 def rag_chat_csv(user_query):
@@ -48,11 +40,10 @@ def rag_chat_csv(user_query):
     :return:
     """
 
-    global vectorstore
-    global columns
-    document_contents = DOCUMENT_CONTENT_DESCRIPTION_BEEF.format(columns=columns)
+    document_contents = DOCUMENT_CONTENT_DESCRIPTION_BEEF.format(columns=DOCUMENT_CONTENT_DESCRIPTION_BEEF_COLUMNS)
     logger.debug(f"Document contents: {document_contents}")
 
+    vectorstore = vector_db.reconnect_vectorstore(get_embeddings_model_openai())
     retriever = SelfQueryRetriever.from_llm(
         llm=llm,
         vectorstore=vectorstore,

@@ -4,6 +4,7 @@ import re
 from flask import Flask, request, render_template, flash, redirect
 
 from common.utils.constants import DEFAULT_N_RESULTS
+from common.utils.utils import check_csv
 from service.chat_csv_service import rag_chat_csv, add_data_from_documents
 from service.chat_service import save_docs_to_db, rag_chat
 
@@ -79,13 +80,17 @@ def document_upload():
 
             # Add doc into vector store after uploading successfully
             global collection_name
-            if file_path.endswith("csv"):
+            global is_csv
+            if check_csv(file_path):
                 # Add csv data to vector store
                 add_data_from_documents(file_path)
 
-                global is_csv
+                #
                 is_csv = True
             else:
+                #
+                is_csv = False
+
                 collection_name = re.split(r"\.[^.]*$", file_name)[0]
                 # Update global variable collection_name=collection_name, must assign it
                 save_docs_to_db(file_path, collection_name=collection_name)
@@ -139,11 +144,18 @@ def chat():
 def doc_selection():
     # Use global variable collection_name
     global collection_name
+    global is_csv
 
     if request.method == "GET":
         # Come into page, show all docs as default
         name_list = os.listdir(UPLOAD_FOLDER)
         if name_list:
+            # Check csv type
+            if check_csv(name_list[0]):
+                is_csv = True
+            else:
+                is_csv = False
+
             return {"name_list": name_list, "collection_name": collection_name}
 
         return {"name_list": [], "collection_name": collection_name}
@@ -151,7 +163,15 @@ def doc_selection():
     elif request.method == "POST":
         # If updating the doc in frontend, need to update doc name in backend, \
         # which is convenient to retrieve different docs in vector store
-        collection_name = re.split(r"\.[^.]*$", request.json.get("collection_name"))[0]
+
+        collection_name_split = re.split(r"\.[^.]*$", request.json.get("collection_name"));
+        # Check csv type
+        if check_csv(collection_name_split[1]):
+            is_csv = True
+        else:
+            is_csv = False
+
+        collection_name = collection_name_split[0]
         print("The doc is changed to: ", collection_name)
 
         # return {'status': 200, 'message': 'ok'}

@@ -53,7 +53,7 @@ def extract_text_from_csv(file):
 
     logger.debug(f"documents: {documents}")
 
-    return documents, ", ".join(docs_data_frame.columns)
+    return documents
 
 # Composite page_content with NLP
 def composite_page_content(row):
@@ -199,3 +199,10 @@ def get_completion(prompt):
         verbose=True
     )
     return chat_client.invoke(prompt)
+
+# Check if the file type is csv
+def check_csv(file_name):
+    if file_name and file_name.endswith("csv"):
+        return True
+    else:
+        return False
