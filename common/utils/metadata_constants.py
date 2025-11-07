@@ -14,36 +14,24 @@ DOCUMENT_CONTENT_DESCRIPTION_BEEF_COLUMNS = """
 """
 
 METADATA_FIELD_INFO_BEEF_SMALL = [
-    AttributeInfo(name="date", description="the date of the data item", type="string"),
-    AttributeInfo(name="year", description="the year of the data item", type="string"),  # string
-    AttributeInfo(name="week_number", description="which week in the current year, namely, week of year", type="integer"),
-    AttributeInfo(name="kill_number", description="the total number of the kill", type="integer"),
-    AttributeInfo(name="bone_number", description="the total number of the boning", type="string"),
-    AttributeInfo(name="kill_weight", description="the total weight of the kill", type="string"),
-    AttributeInfo(name="bone_weight", description="the total weight of the boning", type="string"),
-    AttributeInfo(name="kill_Cost_$", description="the total cost of the kill", type="string"),
-    AttributeInfo(name="bone_Cost_$", description="the total cost of the boning", type="string"),
-    AttributeInfo(name="kill_cost_$/kg", description="the kill cost per kilogram", type="string"),
-    AttributeInfo(name="bone_cost_$/kg", description="the boning cost per kilogram", type="string"),
-    AttributeInfo(name="prod_ctn", description="the number of the cartons of production", type="string"),
-    AttributeInfo(name="prod_kg", description="the total weight of the carton produced", type="string")
+    AttributeInfo(name="Year", description="the year of the data item", type="string"),
+    AttributeInfo(name="Type_of_Question", description="the type of question", type="string"),
+    AttributeInfo(name="TI_Nspire_Skill", description="the description of skills with key words, such as cross product", type="string"),
+    AttributeInfo(name="Topic", description="the topic", type="string"),
+    AttributeInfo(name="Content_Knowledge", description="the content knowledge", type="string"),
+    AttributeInfo(name="Instruction", description="the instruction", type="string"),
+    AttributeInfo(name="Screenshot", description="the screenshot image whole path", type="string")
 ]
 
 # Define the column type for the use of csv file reading
 column_types = {
-        "date": str,
-        "year": str,  # force year into string to match AttributeInfo
-        "week_number": int,
-        "kill_number": int,
-        "bone_number": str,
-        "kill_weight": str,
-        "bone_weight": str,
-        "kill_Cost_$": str,
-        "bone_Cost_$": str,
-        "kill_cost_$/kg": str,
-        "bone_cost_$/kg": str,
-        "prod_ctn": str,
-        "prod_kg": str
+        "Year": str,  # force year into string to match AttributeInfo
+        "Type_of_Question": str,
+        "TI_Nspire_Skill": str,
+        "Topic": str,
+        "Content_Knowledge": str,
+        "Instruction": str,
+        "Screenshot": str
     }
 
 

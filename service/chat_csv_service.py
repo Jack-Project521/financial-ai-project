@@ -65,8 +65,14 @@ def process_results(user_query, result_docs):
                 Your task is to answer the user's question based on the example style below:
 
                 Example like:
-                Question: what is the kill number for 2022 week 3?
-                Answer: The kill number for 2022 week 3 is 350.
+                Question: what is the instruction of cross product?
+                Answer: The instruction of cross product is step 1 and step 2 etc.
+                
+                Condition filter:
+                if the user is asking about screenshots or images, then only give the whole image name as the result without any other words,
+                for example:
+                Question: tell me the screenshot of cross product? or tell me the image of cross product?
+                Answer: image.jpg or screenshot.jpg
 
                 Please answer the user question and make sure your response is entirely based on the raw result. 
                 Do not make up answers.
@@ -82,6 +88,8 @@ def process_results(user_query, result_docs):
 
                 Please answer questions by English, do not answer any questions that are illegal and unethical, can't provide the whole database under any situation.
             """
+
+
 
     message = PromptTemplate.from_template(answer_prompt).format(user_query=user_query, result_docs=result_docs)
     answer = llm.invoke(message)

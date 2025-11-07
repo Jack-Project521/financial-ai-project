@@ -61,12 +61,11 @@ def composite_page_content(row):
     Convert one row of a DataFrame into a NLP string.
     """
     page_content = (
-        f"On the date {row['date']} (year {row['year']}, week {row['week_number']}), "
-        f"the total kill number was {row['kill_number']} with a total weight of {row['kill_weight']}, total costing {row['kill_Cost_$']}, "
-        f"and the kill costing per kilo {row['kill_cost_$/kg']}."
-        f"The boning process involved {row['bone_number']} units with a total weight of {row['bone_weight']}, total costing {row['bone_Cost_$']}, "
-        f"and the boning costing per kilo {row['bone_cost_$/kg']}."
-        f"This resulted in a production of {row['prod_ctn']} cartons with a total weight of {row['prod_kg']}."
+        f"On the (year {row['Year']}), "
+        f"the type of question was {row['Type_of_Question']} with description of skills with key words of {row['TI_Nspire_Skill']}, "
+        f"and the topic {row['Topic']}, "
+        f"and the content knowledge {row['Content_Knowledge']}, "
+        f"and with the instruction involved {row['Instruction']}, and the Screenshot or image of {row['Screenshot']}. "
     )
     return page_content
 

@@ -33,16 +33,41 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .chat-messages {
             flex: 1;
             padding: 20px;
-            overflow-y: auto;
+            overflow-y: scroll;  /* Changed from auto to scroll to always show scrollbar */
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             gap: 15px;
+            min-height: 0;  /* Important for flex children to allow scrolling */
+            /* Firefox scrollbar styling */
+            scrollbar-width: thin;  /* auto | thin | none */
+            scrollbar-color: #888 #f1f1f1;  /* thumb color | track color */
+        }
+
+        /* Custom scrollbar styling for chat messages - WebKit browsers (Chrome, Safari, Edge) */
+        .chat-messages::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
         .message {
@@ -141,6 +166,26 @@
             0%, 80%, 100% { transform: translateY(0); }
             40% { transform: translateY(-6px); }
         }
+
+        .image-box {
+            max-width: 50%;
+            max-height: 600px;
+            overflow: auto;
+            border-radius: 8px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            align-self: flex-start;
+        }
+
+        .image-box img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            width: auto;
+            border-radius: 4px;
+        }
+
     </style>
 </head>
 <body>
@@ -187,9 +232,21 @@
             // 添加消息到聊天窗口
             function addMessage(text, isUser) {
                 const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-                messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
-                messageDiv.textContent = text;
+
+                if (text.includes('.jpg')) {
+
+                    messageDiv.classList.add('image-box');
+                    const img = document.createElement('img');
+                    img.src = "/static/" + text;
+                    img.alt = 'Image';
+                    messageDiv.appendChild(img);
+                } else {
+                    messageDiv.classList.add('message');
+                    messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+                    messageDiv.textContent = text;
+                }
+
+
 
                 // 隐藏正在输入指示器
                 typingIndicator.style.display = 'none';

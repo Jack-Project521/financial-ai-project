@@ -1,7 +1,7 @@
 import os
 import re
 
-from flask import Flask, request, render_template, flash, redirect
+from flask import Flask, request, render_template, flash, redirect, url_for
 
 from common.utils.constants import DEFAULT_N_RESULTS
 from common.utils.utils import check_csv
@@ -9,7 +9,8 @@ from service.chat_csv_service import rag_chat_csv, add_data_from_documents
 from service.chat_service import save_docs_to_db, rag_chat
 
 # Create app object by Flask
-app = Flask(__name__, template_folder="../ui/templates/")
+
+app = Flask(__name__, template_folder="../ui/templates/", static_folder="../static", static_url_path="/static")
 
 # Configure upload folder
 UPLOAD_FOLDER = "uploads"
@@ -111,7 +112,8 @@ def document_upload():
 @app.route("/chat/", methods=["GET", "POST"])
 def chat():
     if request.method == "GET":
-        return render_template("chat.html")
+        image_url = url_for('static', filename='')
+        return render_template("chat.html", )
 
     elif request.method == "POST":
         # Get chat message from user
