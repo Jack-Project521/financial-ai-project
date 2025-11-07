@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chat Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -92,6 +93,110 @@
             border-bottom-left-radius: 4px;
         }
 
+        /* Markdown styling */
+        .message h1,
+        .message h2,
+        .message h3,
+        .message h4,
+        .message h5,
+        .message h6 {
+            margin: 10px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .message h1 { font-size: 1.5em; }
+        .message h2 { font-size: 1.3em; }
+        .message h3 { font-size: 1.1em; }
+
+        .message p {
+            margin: 8px 0;
+        }
+
+        .message ul,
+        .message ol {
+            margin: 8px 0;
+            padding-left: 25px;
+        }
+
+        .message li {
+            margin: 4px 0;
+        }
+
+        .message code {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .message pre {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .message pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .message blockquote {
+            border-left: 3px solid rgba(0, 0, 0, 0.2);
+            padding-left: 12px;
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .message table {
+            border-collapse: collapse;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        .message th,
+        .message td {
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        .message th {
+            background-color: rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+
+        .message a {
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .message strong {
+            font-weight: 600;
+        }
+
+        .message em {
+            font-style: italic;
+        }
+
+        .user-message * {
+            color: white;
+        }
+
+        .user-message code {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-message pre {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .user-message a {
+            color: #b3d9ff;
+        }
+
         .input-area {
             display: flex;
             padding: 15px;
@@ -168,23 +273,19 @@
         }
 
         .image-box {
-            max-width: 50%;
-            max-height: 600px;
-            overflow: auto;
-            border-radius: 8px;
-            padding: 8px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            align-self: flex-start;
+            max-width: 65%;
+            max-height: 80vh;
         }
 
         .image-box img {
             display: block;
-            max-width: 100%;
-            height: auto;
-            width: auto;
+            max-width: 65%;
+            height: 600px;
+            width: 776px;
             border-radius: 4px;
+            object-fit: contain;
         }
+
 
     </style>
 </head>
@@ -243,7 +344,13 @@
                 } else {
                     messageDiv.classList.add('message');
                     messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
-                    messageDiv.textContent = text;
+                    // Render markdown for bot messages, plain text for user messages
+                    if (isUser) {
+                        messageDiv.textContent = text;
+                    } else {
+                        // Parse markdown and set as HTML
+                        messageDiv.innerHTML = marked.parse(text);
+                    }
                 }
 
 
@@ -273,14 +380,14 @@
                     const xhr = new XMLHttpRequest();
                     xhr.addEventListener('load', function() {
                         if (xhr.status === 200) {
-                            console.log('成功返回数据!');
+                            console.log('Successfully returned data!');
 
                             const response = xhr.responseText;
                             console.log("response:", response)
                             resolve(response);
 
                         } else {
-                            alert('发送失败: ' + xhr.statusText);
+                            alert('Send message failed: ' + xhr.statusText);
                         }
                     });
 
@@ -292,20 +399,7 @@
                     console.log("data:", data)
                     xhr.send(data);
 
-                    // 方式2：fetch-then
-                    // fetch('/chat/', {
-                    //     method: 'POST',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     },
-                    //     body: JSON.stringify({'message': message})
-                    // })
-                    // .then(response => response.json())
-                    // .then(data => {
-                    //     console.log("response:", data)
-                    //     resolve(response)
-                    // })
-                    // .catch(error => alert('发送失败！'));
+                    
 
                 });
             }
@@ -333,8 +427,8 @@
                     // 添加机器人回复
                     addMessage(response, false);
                 } catch (error) {
-                    addMessage("抱歉，出现了错误。请稍后再试。", false);
-                    console.error("发送消息失败:", error);
+                    addMessage("Sorry, there is an error. Please try again later.", false);
+                    console.error("Send message failed:", error);
                 } finally {
                     // 重新启用按钮和输入框
                     sendButton.disabled = false;

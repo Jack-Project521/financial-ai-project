@@ -112,8 +112,7 @@ def document_upload():
 @app.route("/chat/", methods=["GET", "POST"])
 def chat():
     if request.method == "GET":
-        image_url = url_for('static', filename='')
-        return render_template("chat.html", )
+        return render_template("chat.html")
 
     elif request.method == "POST":
         # Get chat message from user

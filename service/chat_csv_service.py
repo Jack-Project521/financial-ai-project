@@ -66,12 +66,12 @@ def process_results(user_query, result_docs):
 
                 Example like:
                 Question: what is the instruction of cross product?
-                Answer: The instruction of cross product is step 1 and step 2 etc.
+                Answer: The instruction of cross product is step 1 and step 2 and examples.
                 
                 Condition filter:
                 if the user is asking about screenshots or images, then only give the whole image name as the result without any other words,
                 for example:
-                Question: tell me the screenshot of cross product? or tell me the image of cross product?
+                Question: tell or show me the screenshot of cross product? or tell or show me the image of cross product?
                 Answer: image.jpg or screenshot.jpg
 
                 Please answer the user question and make sure your response is entirely based on the raw result. 
