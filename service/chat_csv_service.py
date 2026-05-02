@@ -1,9 +1,12 @@
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.retrievers import SelfQueryRetriever
-from langchain_core.prompts import PromptTemplate
+from langchain_core.messages import AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.tools import tool
 
 from common.utils.log import logger
-from common.utils.metadata_constants import DOCUMENT_CONTENT_DESCRIPTION_BEEF, METADATA_FIELD_INFO_BEEF, \
-    METADATA_FIELD_INFO_BEEF_SMALL, DOCUMENT_CONTENT_DESCRIPTION_BEEF_COLUMNS
+from common.utils.metadata_constants import DOCUMENT_CONTENT_DESCRIPTION_BEEF, METADATA_FIELD_INFO_BEEF_SMALL, \
+    DOCUMENT_CONTENT_DESCRIPTION_BEEF_COLUMNS
 from common.utils.models import get_lc_model_client, OPENAI_API_KEY, OPENAI_MODEL, \
     get_embeddings_model_openai
 from common.utils.utils import extract_text_from_csv
@@ -39,7 +42,44 @@ def rag_chat_csv(user_query):
     :param user_query:
     :return:
     """
+    logger.debug(f"Invoking CSV agent with query: {user_query}")
+    agent_executor = create_csv_agent_executor()
+    response = agent_executor.invoke({"input": user_query})
+    return AIMessage(content=response.get("output", "I can't answer your question"))
 
+def create_csv_agent_executor():
+    tools = [retrieve_csv_data]
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """
+            You are a CSV data agent for beef statistics.
+
+            Answer the user's question in English using only data returned by the
+            retrieve_csv_data tool. Always call retrieve_csv_data before answering.
+
+            If the tool result is insufficient, answer exactly:
+            I can't answer your question
+
+            Do not make up answers. Do not provide the whole database under any situation.
+            Do not answer questions that are illegal or unethical.
+        """),
+        ("human", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ])
+    agent = create_tool_calling_agent(llm, tools, prompt)
+    print("Agent created successfully")
+    return AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+
+
+@tool
+def retrieve_csv_data(user_query: str) -> str:
+    """
+    Search the uploaded beef statistics CSV data for rows relevant to the user's question.
+
+    Use this tool for questions about date, year, week_number, kill_number, bone_number,
+    kill_weight, bone_weight, kill_Cost_$, bone_Cost_$, kill_cost_$/kg, bone_cost_$/kg,
+    prod_ctn, or prod_kg. The tool returns only the retrieved CSV rows and metadata.
+    """
     document_contents = DOCUMENT_CONTENT_DESCRIPTION_BEEF.format(columns=DOCUMENT_CONTENT_DESCRIPTION_BEEF_COLUMNS)
     logger.debug(f"Document contents: {document_contents}")
 
@@ -54,36 +94,19 @@ def rag_chat_csv(user_query):
         enable_limit=True
     )
 
-    print("Invoking retriever...")
-    results = process_results(user_query, retriever.invoke(user_query))
-    return results
-
+    logger.debug("Invoking CSV retriever tool")
+    return process_results(user_query, retriever.invoke(user_query))
 
 def process_results(user_query, result_docs):
-    answer_prompt = """
-                You are a great question-answering robot.
-                Your task is to answer the user's question based on the example style below:
+    if not result_docs:
+        return "I can't answer your question"
 
-                Example like:
-                Question: what is the kill number for 2022 week 3?
-                Answer: The kill number for 2022 week 3 is 350.
+    formatted_results = []
+    for index, doc in enumerate(result_docs, start=1):
+        formatted_results.append(
+            f"Result {index}\n"
+            f"metadata: {doc.metadata}\n"
+            f"content: {doc.page_content}"
+        )
 
-                Please answer the user question and make sure your response is entirely based on the raw result. 
-                Do not make up answers.
-
-                User question:
-                {user_query}
-
-                Raw result:
-                {result_docs}
-
-                If the raw result is insufficient to answer the user's question, please 
-                respond directly with "I can't answer your question".
-
-                Please answer questions by English, do not answer any questions that are illegal and unethical, can't provide the whole database under any situation.
-            """
-
-    message = PromptTemplate.from_template(answer_prompt).format(user_query=user_query, result_docs=result_docs)
-    answer = llm.invoke(message)
-
-    return answer
+    return "\n\n".join(formatted_results)
