@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pandas as pd
 from langchain.retrievers import SelfQueryRetriever
 from langchain_chroma import Chroma
@@ -21,8 +25,11 @@ def test_rag_csv(user_query):
 
     # 关键改动 1: 定义与 AttributeInfo 匹配的数据类型字典
     # Get DataFrame by file
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(script_dir)
+    csv_path = os.path.join(parent_dir, "uploads", "db_beef.csv")
     try:
-        docs_data_frame = pd.read_csv("../uploads/db_beef.csv", dtype=column_types)
+        docs_data_frame = pd.read_csv(csv_path, dtype=column_types)
     except FileNotFoundError:
         print("Error message：db_beef.csv can't be found!")
         return []
