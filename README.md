@@ -20,7 +20,7 @@ The key should be configured in .env file in docker, which you can't find on Git
 
 ## Run project
 - Confirm first the Docker Desktop has been started.
-- Go to the Terminal in Pycharm, run 'ccompose up' to start the installation of docker images and container, it takes a while at first time.
+- Go to the Terminal in Pycharm, run 'docker-compose up' to start the installation of docker images and container, it takes a while at first time.
   - Note: if your local Pycharm can't find docker command, follow the step below to fix the shell configuration problem:
     ```
     In PyCharm:

@@ -1,3 +1,6 @@
+import re
+import time
+
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.retrievers import SelfQueryRetriever
 from langchain_core.messages import AIMessage
@@ -38,14 +41,58 @@ def add_data_from_documents(file_path):
 
 def rag_chat_csv(user_query):
     """
-
     :param user_query:
-    :return:
+    :return: Generator yielding streaming chunks or complete AIMessage if streaming not requested
+    """
+    logger.debug(f"Invoking CSV agent with query: {user_query}")
+    agent_executor = create_csv_agent_executor()
+    
+    # Stream events from the agent
+    for event in agent_executor.stream({"input": user_query}):
+        yield event
+
+
+def rag_chat_csv_complete(user_query):
+    """
+    Non-streaming version that returns complete response.
+    
+    :param user_query:
+    :return: AIMessage with complete response
     """
     logger.debug(f"Invoking CSV agent with query: {user_query}")
     agent_executor = create_csv_agent_executor()
     response = agent_executor.invoke({"input": user_query})
     return AIMessage(content=response.get("output", "I can't answer your question"))
+
+
+def stream_rag_chat_csv(user_query):
+    """
+    Stream CSV agent response for real-time output.
+    Yields formatted chunks suitable for Server-Sent Events or streaming responses.
+    
+    :param user_query: User's query
+    :return: Generator yielding text chunks
+    """
+    logger.debug(f"Streaming CSV agent with query: {user_query}")
+    agent_executor = create_csv_agent_executor()
+    
+    buffer = ""
+    for event in agent_executor.stream({"input": user_query}):
+        # Extract text from LLM token events - no use currently
+        # if "messages" in event:
+        #     for message in event["messages"]:
+        #         if hasattr(message, "content") and isinstance(message.content, str):
+        #             buffer += message.content
+                    #yield message.content
+        
+        # Extract final output
+        if "output" in event:
+            output = event["output"]
+            if isinstance(output, str):
+                words = output.split()  
+                for word in words:
+                    yield f" {word} \n\n" # space + word
+                    time.sleep(0.1)  # simulate LLM latency
 
 def create_csv_agent_executor():
     tools = [retrieve_csv_data]
@@ -104,7 +151,6 @@ def process_results(user_query, result_docs):
     formatted_results = []
     for index, doc in enumerate(result_docs, start=1):
         formatted_results.append(
-            f"Result {index}\n"
             f"metadata: {doc.metadata}\n"
             f"content: {doc.page_content}"
         )

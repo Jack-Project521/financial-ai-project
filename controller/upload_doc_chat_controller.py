@@ -1,11 +1,11 @@
 import os
 import re
 
-from flask import Flask, request, render_template, flash, redirect
+from flask import Flask, request, render_template, flash, redirect, Response
 
 from common.utils.constants import DEFAULT_N_RESULTS
 from common.utils.utils import check_csv
-from service.chat_csv_service import rag_chat_csv, add_data_from_documents
+from service.chat_csv_service import stream_rag_chat_csv, rag_chat_csv_complete, add_data_from_documents
 from service.chat_service import save_docs_to_db, rag_chat
 
 # Create app object by Flask
@@ -107,37 +107,85 @@ def document_upload():
 # ------------------------------------------------------------------------- #
 
 # Chat Page
+# @app.route("/")
+# @app.route("/chat/", methods=["GET", "POST"])
+# def chat():
+#     if request.method == "GET":
+#         return render_template("chat.html")
+
+#     elif request.method == "POST":
+#         # Get chat message from user
+#         user_query = request.json.get("message")
+#         print("user_query: ", user_query)
+
+#         # Retrieval
+#         if user_query:
+
+#             global is_csv
+#             if is_csv:
+#                 response = rag_chat_csv(user_query)
+#                 print("response: ", response)
+#             else:
+#                 # Retrieving data from relevant collection
+#                 response = rag_chat(user_query, collection_name=re.split(r"\.[^.]*$", collection_name)[0], n_results=DEFAULT_N_RESULTS)
+#                 print("response content: ", response.content)
+
+#             return response.content
+
+#         else:
+#             return "Sorry, I don't know."
+
+#     # Go back to original url -> page
+#     return redirect(request.url)
+
+
+# Chat Page with streaming support
 @app.route("/")
 @app.route("/chat/", methods=["GET", "POST"])
 def chat():
     if request.method == "GET":
         return render_template("chat.html")
-
+    
     elif request.method == "POST":
         # Get chat message from user
         user_query = request.json.get("message")
         print("user_query: ", user_query)
-
+        
         # Retrieval
         if user_query:
-
             global is_csv
+            
+            # Check if streaming is requested (for real-time output)
+            enable_streaming = request.json.get("stream", False)
+            
             if is_csv:
-                response = rag_chat_csv(user_query)
-                print("response: ", response)
+                if enable_streaming:
+                    # Stream CSV response
+                    def generate():
+                        try:
+                            for chunk in stream_rag_chat_csv(user_query):
+                                if chunk:
+                                    yield f"data: {chunk}\n\n"
+                        except Exception as e:
+                            print(f"Streaming error: {e}")
+                            yield f"data: Error: {str(e)}\n\n"
+                    
+                    return Response(generate(), mimetype='text/event-stream')
+                else:
+                    # Non-streaming response
+                    response = rag_chat_csv_complete(user_query)
+                    print("response: ", response)
+                    return response.content
             else:
-                # Retrieving data from relevant collection
+                # Non-CSV documents (use existing rag_chat)
                 response = rag_chat(user_query, collection_name=re.split(r"\.[^.]*$", collection_name)[0], n_results=DEFAULT_N_RESULTS)
                 print("response content: ", response.content)
-
-            return response.content
-
+                return response.content
         else:
             return "Sorry, I don't know."
-
+    
     # Go back to original url -> page
     return redirect(request.url)
-
 
 # Chat page: change doc names by using selection label on page left-up
 @app.route("/selection/", methods=["GET", "POST"])

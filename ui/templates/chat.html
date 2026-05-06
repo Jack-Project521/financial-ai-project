@@ -231,29 +231,97 @@
                     xhr.open('POST', '/chat/', true); // post请求后端接口’/chat/‘
                     xhr.setRequestHeader("Content-Type", "application/json");
                     // xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    let data = JSON.stringify({'message': message});
+                    let data = JSON.stringify({'message': message, 'stream': false});
                     console.log("data:", data)
                     xhr.send(data);
-
-                    // 方式2：fetch-then
-                    // fetch('/chat/', {
-                    //     method: 'POST',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     },
-                    //     body: JSON.stringify({'message': message})
-                    // })
-                    // .then(response => response.json())
-                    // .then(data => {
-                    //     console.log("response:", data)
-                    //     resolve(response)
-                    // })
-                    // .catch(error => alert('发送失败！'));
 
                 });
             }
 
-            // 处理发送消息
+            // Streaming version using fetch with streaming reader
+            function sendMessageToBackendStreaming(message, onChunk) {
+                return new Promise((resolve, reject) => {
+                    let fullResponse = "";
+                    
+                    // Send message to get streaming response
+                    fetch('/chat/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({'message': message, 'stream': true})
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        
+                        function read() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    console.log("Stream complete");
+                                    resolve(fullResponse);
+                                    return;
+                                }
+                                
+                                const chunk = decoder.decode(value);
+                                console.log("Chunk received:", chunk);
+                                
+                                // Parse SSE format: "data: content\n\n"
+                                const lines = chunk.split('\n');
+                                for (const line of lines) {
+                                    if (line.startsWith('data: ')) {
+                                        const content = line.replace('data: ', '');
+                                        if (content) {
+                                            fullResponse += content;
+                                            onChunk(content);
+                                        }
+                                    }
+                                }
+                                
+                                read();
+                            }).catch(error => {
+                                console.error("Read error:", error);
+                                reject(error);
+                            });
+                        }
+                        
+                        read();
+                    })
+                    .catch(error => {
+                        console.error("Fetch error:", error);
+                        reject(error);
+                    });
+                });
+            }
+
+            // Helper function to add streaming message
+            function addStreamingMessage(isUser) {
+                const messageDiv = document.createElement('div');
+                messageDiv.style.display = "none";
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+                messageDiv.textContent = '';
+
+                
+                chatMessages.insertBefore(messageDiv, typingIndicator);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                return messageDiv;
+            }
+
+            // Update streaming message content
+            function updateStreamingMessage(messageDiv, content) {
+                typingIndicator.style.display = 'none';
+                messageDiv.style.display = "block";
+                messageDiv.textContent += content;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // 处理发送消息 - Support both streaming and non-streaming
             async function handleSendMessage() {
                 const message = userInput.value.trim();
                 if (!message) return;
@@ -270,11 +338,21 @@
                 showTypingIndicator();
 
                 try {
-                    // 发送消息到后端并获取回复
-                    const response = await sendMessageToBackend(message);
-
-                    // 添加机器人回复
-                    addMessage(response, false);
+                    // Check if streaming is supported (optional toggle)
+                    const useStreaming = true;  // Set to false to disable streaming
+                    
+                    if (useStreaming) {
+                        // Streaming mode
+                        const responseDiv = addStreamingMessage(false);
+                        
+                        await sendMessageToBackendStreaming(message, (chunk) => {
+                            updateStreamingMessage(responseDiv, chunk);
+                        });
+                    } else {
+                        // Non-streaming mode
+                        const response = await sendMessageToBackend(message);
+                        addMessage(response, false);
+                    }
                 } catch (error) {
                     addMessage("抱歉，出现了错误。请稍后再试。", false);
                     console.error("发送消息失败:", error);
